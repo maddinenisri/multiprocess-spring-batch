@@ -73,7 +73,7 @@ public class StandaloneInfrastructureConfiguration implements InfrastructureConf
     public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
         LocalContainerEntityManagerFactoryBean em = new LocalContainerEntityManagerFactoryBean();
         em.setDataSource(dataSource());
-        em.setPackagesToScan(new String[] { "com.mdstech.batch.multiprocess" });
+        em.setPackagesToScan(new String[] { "com.mdstech.batch" });
 
         HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
         vendorAdapter.setShowSql(false);

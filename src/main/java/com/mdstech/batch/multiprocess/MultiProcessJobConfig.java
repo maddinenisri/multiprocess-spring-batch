@@ -1,6 +1,7 @@
 package com.mdstech.batch.multiprocess;
 
 import com.mdstech.batch.common.config.InfrastructureConfiguration;
+import com.mdstech.batch.domain.CustomerDomain;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.*;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;

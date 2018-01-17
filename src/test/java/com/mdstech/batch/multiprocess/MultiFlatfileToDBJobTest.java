@@ -1,6 +1,7 @@
 package com.mdstech.batch.multiprocess;
 
 import com.mdstech.batch.common.config.ApplicationConfiguration;
+import com.mdstech.batch.domain.CustomerDomain;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.batch.core.Job;

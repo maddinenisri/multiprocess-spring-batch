@@ -1,5 +1,6 @@
 package com.mdstech.batch.multiprocess;
 
+import com.mdstech.batch.domain.CustomerDomain;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

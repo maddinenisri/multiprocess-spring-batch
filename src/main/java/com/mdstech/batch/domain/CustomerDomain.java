@@ -1,4 +1,4 @@
-package com.mdstech.batch.multiprocess;
+package com.mdstech.batch.domain;
 
 import lombok.Data;
 

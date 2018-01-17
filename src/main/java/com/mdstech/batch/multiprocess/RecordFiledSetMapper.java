@@ -1,5 +1,6 @@
 package com.mdstech.batch.multiprocess;
 
+import com.mdstech.batch.domain.CustomerDomain;
 import org.springframework.batch.item.file.mapping.FieldSetMapper;
 import org.springframework.batch.item.file.transform.FieldSet;
 import org.springframework.validation.BindException;
