@@ -10,12 +10,12 @@ public class CustomStepListener implements StepExecutionListener {
 
     @Override
     public void beforeStep(StepExecution stepExecution) {
-        log.info("StepExecutionListener  ---- before  ");
+        log.debug("StepExecutionListener  ---- before  ");
     }
 
     @Override
     public ExitStatus afterStep(StepExecution stepExecution) {
-        log.info("StepExecutionListener  ---- after  ");
+        log.debug("StepExecutionListener  ---- after  ");
         return null;
     }
 }

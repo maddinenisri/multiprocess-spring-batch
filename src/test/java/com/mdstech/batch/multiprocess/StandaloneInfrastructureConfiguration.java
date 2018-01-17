@@ -1,24 +1,29 @@
 package com.mdstech.batch.multiprocess;
 
+import com.mdstech.batch.common.config.InfrastructureConfiguration;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.core.io.Resource;
+import org.springframework.core.task.SimpleAsyncTaskExecutor;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.jdbc.datasource.init.DataSourceInitializer;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.Database;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import javax.sql.DataSource;
 import java.net.MalformedURLException;
 import java.util.Properties;
 
 @Configuration
-@EnableBatchProcessing
-public class TestMultiprocessJobConfig {
+@Primary
+public class StandaloneInfrastructureConfiguration implements InfrastructureConfiguration {
 
     @Value("org/springframework/batch/core/schema-drop-h2.sql")
     private Resource dropReopsitoryTables;
@@ -27,18 +32,24 @@ public class TestMultiprocessJobConfig {
     private Resource dataReopsitorySchema;
 
     @Bean
+    @Primary
     public DataSource dataSource() {
         DriverManagerDataSource dataSource  = new DriverManagerDataSource();
-//        dataSource.setDriverClassName("com.mysql.jdbc.Driver");
-//        dataSource.setUrl("jdbc:mysql://localhost:3306/dqgen?verifyServerCertificate=false&useSSL=true");
-//        dataSource.setUsername("test1");
-//        dataSource.setPassword("testSample");
-
         dataSource.setDriverClassName("org.h2.Driver");
         dataSource.setUrl("jdbc:h2:mem:example-app;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE");
         dataSource.setUsername("sa");
         dataSource.setPassword("sa");
         return dataSource;
+    }
+
+    @Override
+    @Bean
+    public TaskExecutor taskExecutor() {
+        ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
+        taskExecutor.setMaxPoolSize(4);
+        taskExecutor.afterPropertiesSet();
+        return taskExecutor;
+//        return new SimpleAsyncTaskExecutor();
     }
 
     @Bean
