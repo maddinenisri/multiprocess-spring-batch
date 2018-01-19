@@ -1,14 +1,11 @@
-package com.mdstech.batch.multiprocess;
+package com.mdstech.batch.multithread;
 
 import com.mdstech.batch.common.config.ApplicationConfiguration;
-import com.mdstech.batch.common.config.StandaloneInfrastructureConfiguration;
 import com.mdstech.batch.domain.CustomerDomain;
+import com.mdstech.batch.common.config.StandaloneInfrastructureConfiguration;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.JobExecution;
-import org.springframework.batch.core.JobParameters;
-import org.springframework.batch.core.JobParametersInvalidException;
+import org.springframework.batch.core.*;
 import org.springframework.batch.core.configuration.JobRegistry;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.batch.core.launch.NoSuchJobException;
@@ -28,21 +25,31 @@ import static org.junit.Assert.assertThat;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = {ApplicationConfiguration.class, StandaloneInfrastructureConfiguration.class})
-public class MultiFlatfileToDBJobTest {
-
+public class MultiThreadFlatfileToDBJobTest {
     @Autowired
     private JobLauncher jobLauncher;
 
     @Autowired
     private JobRegistry jobRegistry;
 
+//    @Autowired
+//    @Qualifier("partitionerJob")
+//    private Job job;
+
     @Autowired
     private EntityManager entityManager;
 
+    private JobParameters getJobParameters() {
+        JobParametersBuilder jobParametersBuilder = new JobParametersBuilder();
+        jobParametersBuilder.addString("inputFile", "/Users/srini/IdeaProjects/java8-file-handler/target/output_data.csv");
+        jobParametersBuilder.addString("stagingDirectory", "/tmp/multithreadJob");
+        return jobParametersBuilder.toJobParameters();
+    }
+
     @Test
     public void testSampleJob() throws JobParametersInvalidException, JobExecutionAlreadyRunningException, JobRestartException, JobInstanceAlreadyCompleteException, NoSuchJobException {
-        Job job = jobRegistry.getJob("partitionerJob");
-        JobExecution jobExecution = jobLauncher.run(job, new JobParameters());
+        Job job = jobRegistry.getJob("multiThreadJob");
+        JobExecution jobExecution = jobLauncher.run(job, getJobParameters());
         System.out.println(jobExecution.getStatus());
         System.out.println("Completed");
 
@@ -53,4 +60,6 @@ public class MultiFlatfileToDBJobTest {
 
         assertThat("Expected nearly 2.5 million", count, equalTo(2498925L));
     }
+
 }
+

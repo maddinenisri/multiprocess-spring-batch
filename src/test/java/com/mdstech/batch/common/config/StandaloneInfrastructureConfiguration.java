@@ -1,4 +1,4 @@
-package com.mdstech.batch.multiprocess;
+package com.mdstech.batch.common.config;
 
 import com.mdstech.batch.common.config.InfrastructureConfiguration;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
@@ -45,10 +45,14 @@ public class StandaloneInfrastructureConfiguration implements InfrastructureConf
     @Override
     @Bean
     public TaskExecutor taskExecutor() {
-        ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
-        taskExecutor.setMaxPoolSize(4);
-        taskExecutor.afterPropertiesSet();
-        return taskExecutor;
+//        ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
+//        taskExecutor.setMaxPoolSize(4);
+//        taskExecutor.afterPropertiesSet();
+//        return taskExecutor;
+
+        SimpleAsyncTaskExecutor simpleAsyncTaskExecutor = new SimpleAsyncTaskExecutor();
+        simpleAsyncTaskExecutor.setConcurrencyLimit(8);
+        return simpleAsyncTaskExecutor;
 //        return new SimpleAsyncTaskExecutor();
     }
 

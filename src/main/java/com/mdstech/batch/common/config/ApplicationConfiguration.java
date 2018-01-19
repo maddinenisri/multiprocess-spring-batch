@@ -1,6 +1,8 @@
 package com.mdstech.batch.common.config;
 
+import com.mdstech.batch.multiline.MultilLineJobConfig;
 import com.mdstech.batch.multiprocess.MultiProcessJobConfig;
+import com.mdstech.batch.multithread.MultiThreadJobConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.configuration.annotation.BatchConfigurer;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
@@ -46,6 +48,17 @@ public class ApplicationConfiguration implements BatchConfigurer {
     public ApplicationContextFactory multiprocessJobs() {
         return new GenericApplicationContextFactory(MultiProcessJobConfig.class);
     }
+
+    @Bean
+    public ApplicationContextFactory multiThreadJobs() {
+        return new GenericApplicationContextFactory(MultiThreadJobConfig.class);
+    }
+
+    @Bean
+    public ApplicationContextFactory multilLineJobs() {
+        return new GenericApplicationContextFactory(MultilLineJobConfig.class);
+    }
+
 
     @Bean
     @Qualifier(value = "entityManager")
