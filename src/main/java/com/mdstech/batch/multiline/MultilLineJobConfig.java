@@ -46,19 +46,20 @@ public class MultilLineJobConfig {
     public Step multilineStep() {
         return stepBuilderFactory.get("multilineStep")
                 .<ContainerVO, ContainerVO> chunk(5)
-                .reader(reader())
+                .reader(readerDelegate())
                 .writer(writer())
                 .build();
     }
 
-    public ItemReader reader() {
+    @Bean
+    public ItemReader readerDelegate() {
         MultiLineItemReader multiLineItemReader = new MultiLineItemReader();
-        multiLineItemReader.setDelegate(readerDelegate());
+        multiLineItemReader.setDelegate(reader());
         return multiLineItemReader;
     }
 
     @Bean
-    public FlatFileItemReader readerDelegate() {
+    public FlatFileItemReader reader() {
         FlatFileItemReader flatFileItemReader = new FlatFileItemReader();
         flatFileItemReader.setResource(new FileSystemResource("src/main/resources/input/multiline.txt"));
         flatFileItemReader.setLineMapper(patternMatchingCompositeMapper());
