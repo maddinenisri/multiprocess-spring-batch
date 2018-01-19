@@ -67,13 +67,13 @@ public class MultiLineItemReader implements ItemReader<ContainerVO>, ItemStream 
     private void setValue(MultiRowVO multiRowVO, String percent, String value) {
         switch(percent) {
             case "100":
-                multiRowVO.setMax(value);
+                multiRowVO.setFull(value);
                 break;
             case "50":
-                multiRowVO.setMed(value);
+                multiRowVO.setHalf(value);
                 break;
             case "0":
-                multiRowVO.setMin(value);
+                multiRowVO.setZero(value);
                 break;
             case "75":
                 multiRowVO.setThreefourth(value);

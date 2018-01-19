@@ -6,9 +6,9 @@ import lombok.Data;
 public class MultiRowVO {
     private String key;
     private String groupKey;
-    private String max;
-    private String med;
-    private String min;
+    private String full;
+    private String half;
+    private String zero;
     private String threefourth;
     private String onefourth;
 }
