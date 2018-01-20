@@ -6,12 +6,14 @@ import com.mdstech.batch.multiprocess.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.*;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
+import org.springframework.batch.core.configuration.annotation.JobScope;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.builder.FlowBuilder;
 import org.springframework.batch.core.job.flow.Flow;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.step.tasklet.SystemCommandTasklet;
+import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.MultiResourceItemReader;
@@ -37,6 +39,9 @@ public class MultiThreadJobConfig {
     @Autowired
     private EntityManagerFactory entityManagerFactory;
 
+    @Autowired
+    private InfrastructureConfiguration infrastructureConfiguration;
+
     @Bean
     @StepScope
     public ItemWriter<CustomerDomain> itemWriter() {
@@ -44,23 +49,13 @@ public class MultiThreadJobConfig {
         return customerWriter;
     }
 
-    @Autowired
-    private InfrastructureConfiguration infrastructureConfiguration;
-
-    //TODO: Need to work on how to map when no files are exist, dynamically load files
-    @Value("file:/tmp/multithreadJob/csv*")
-    private Resource[] resources;
-
-    @Value("file:/tmp/multithreadJob")
-    private Resource workingDirectory;
-
     @Bean(name="multiThreadJob")
     public Job multiThreadJob() {
         FlowBuilder<Flow> flowBuilder = new FlowBuilder<Flow>("flow1");
         Flow splitFlow =  flowBuilder
                 .start(splitStep())
                 .next(partitionStep())
-//                .next(cleanupStep())
+                .next(cleanupStep())
                 .build();
 
         return jobBuilderFactory.get("multiThreadJob")
@@ -71,7 +66,7 @@ public class MultiThreadJobConfig {
 
     @Bean
     public Step cleanupStep() {
-        return stepBuilderFactory.get("cleanupStep").tasklet(fileDeletingTasklet()).build();
+        return stepBuilderFactory.get("cleanupStep").tasklet(fileDeletingTasklet(null)).build();
     }
 
     @Bean
@@ -80,26 +75,29 @@ public class MultiThreadJobConfig {
     }
 
     @Bean
-//    @StepScope
     public Step splitStep() {
-        SystemCommandTasklet systemCommandTasklet = new SystemCommandTasklet();
-        systemCommandTasklet.setCommand(String.format("split -a 5 -l 5000 %s %s", "/Users/srini/IdeaProjects/java8-file-handler/target/output_data.csv", "csv"));
-        systemCommandTasklet.setTimeout(60000);
-        systemCommandTasklet.setWorkingDirectory("/tmp/multithreadJob");
-//        systemCommandTasklet.afterPropertiesSet();
         return stepBuilderFactory
                 .get("splitStep")
-                .tasklet(systemCommandTasklet)
+                .tasklet(systemCommandTasklet(null, null))
                 .listener(stepExecutionListener())
                 .build();
     }
 
     @Bean
-//    @StepScope
+    @JobScope
+    public SystemCommandTasklet systemCommandTasklet(@Value("#{jobParameters['inputFile']}") String inputFile, @Value("#{jobParameters['stagingDirectory']}") String stagingDirectory) {
+        SystemCommandTasklet systemCommandTasklet = new SystemCommandTasklet();
+        systemCommandTasklet.setCommand(String.format("split -a 5 -l 5000 %s %s", inputFile, "csv"));
+        systemCommandTasklet.setTimeout(60000);
+        systemCommandTasklet.setWorkingDirectory(stagingDirectory);
+        return systemCommandTasklet;
+    }
+
+    @Bean
     public Step partitionStep() {
         return stepBuilderFactory.get("partitionStep")
                 .<CustomerDomain, CustomerDomain>chunk(5000)
-                .reader(multiResourceItemReader())
+                .reader(multiResourceItemReader(null))
                 .writer(itemWriter())
                 .listener(chunkListener())
                 .listener(stepExecutionListener())
@@ -119,7 +117,7 @@ public class MultiThreadJobConfig {
 
     @Bean
     @StepScope
-    public MultiResourceItemReader<CustomerDomain> multiResourceItemReader() {
+    public MultiResourceItemReader<CustomerDomain> multiResourceItemReader(@Value("#{jobParameters['iputFilesPath']}") Resource[] resources) {
         MultiResourceItemReader<CustomerDomain> resourceItemReader = new MultiResourceItemReader<CustomerDomain>();
         resourceItemReader.setResources(resources);
         resourceItemReader.setDelegate(reader());
@@ -137,7 +135,6 @@ public class MultiThreadJobConfig {
         defaultLineMapper.setFieldSetMapper(new RecordFiledSetMapper());
         FlatFileItemReader flatFileItemReader = new FlatFileItemReader();
         flatFileItemReader.setLineMapper(defaultLineMapper);
-//        flatFileItemReader.setResource(new FileSystemResource("/Users/srini/IdeaProjects/java8-file-handler/target/"+fileName));
         return flatFileItemReader;
     }
 
@@ -147,11 +144,10 @@ public class MultiThreadJobConfig {
     }
 
     @Bean
-    public FileDeletingTasklet fileDeletingTasklet() {
+    @JobScope
+    public FileDeletingTasklet fileDeletingTasklet(@Value("#{jobParameters['workingDirectory']}") Resource workingDirectory) {
         FileDeletingTasklet tasklet = new FileDeletingTasklet();
         tasklet.setDirectory(workingDirectory);
         return tasklet;
     }
-
-
 }

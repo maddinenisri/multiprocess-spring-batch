@@ -10,12 +10,12 @@ public class MultiLineStepListener implements StepExecutionListener {
 
     @Override
     public void beforeStep(StepExecution stepExecution) {
-        log.info("Before Step execution");
+        log.debug("Before Step execution");
     }
 
     @Override
     public ExitStatus afterStep(StepExecution stepExecution) {
-        log.info("After Step Execution");
+        log.debug("After Step Execution");
         return null;
     }
 }

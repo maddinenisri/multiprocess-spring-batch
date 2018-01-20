@@ -32,6 +32,6 @@ public class CustomerWriter extends JpaItemWriter<CustomerDomain> {
         }
         entityManager.flush();
         entityManager.clear();
-        LOGGER.info("Persisted to DB by " + Thread.currentThread().getName());
+        LOGGER.debug("Persisted to DB by " + Thread.currentThread().getName());
     }
 }

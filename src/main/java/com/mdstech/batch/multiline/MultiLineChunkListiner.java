@@ -9,16 +9,16 @@ public class MultiLineChunkListiner implements ChunkListener {
 
     @Override
     public void beforeChunk(ChunkContext chunkContext) {
-        log.info("Before Chunk");
+        log.debug("Before Chunk");
     }
 
     @Override
     public void afterChunk(ChunkContext chunkContext) {
-        log.info("After Chunk");
+        log.debug("After Chunk");
     }
 
     @Override
     public void afterChunkError(ChunkContext chunkContext) {
-        log.info("Got ERROR for chunk");
+        log.debug("Got ERROR for chunk");
     }
 }

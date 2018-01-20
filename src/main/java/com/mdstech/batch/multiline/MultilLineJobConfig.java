@@ -4,6 +4,7 @@ import com.mdstech.batch.common.config.InfrastructureConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.*;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
+import org.springframework.batch.core.configuration.annotation.JobScope;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.item.ItemReader;
@@ -14,6 +15,7 @@ import org.springframework.batch.item.file.mapping.PatternMatchingCompositeLineM
 import org.springframework.batch.item.file.transform.DelimitedLineTokenizer;
 import org.springframework.batch.item.file.transform.LineTokenizer;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
@@ -30,10 +32,6 @@ public class MultilLineJobConfig {
 
     @Autowired
     public StepBuilderFactory stepBuilderFactory;
-
-    @Autowired
-    private InfrastructureConfiguration infrastructureConfiguration;
-
     @Bean(name="multilineJob")
     public Job multilineJob(Step step) {
         return jobBuilderFactory.get("multilineJob")
@@ -78,14 +76,15 @@ public class MultilLineJobConfig {
     @Bean
     public ItemReader readerDelegate() {
         MultiLineItemReader multiLineItemReader = new MultiLineItemReader();
-        multiLineItemReader.setDelegate(reader());
+        multiLineItemReader.setDelegate(reader(null));
         return multiLineItemReader;
     }
 
     @Bean
-    public FlatFileItemReader reader() {
+    @JobScope
+    public FlatFileItemReader reader(@Value("#{jobParameters['filename']}") String filename) {
         FlatFileItemReader flatFileItemReader = new FlatFileItemReader();
-        flatFileItemReader.setResource(new FileSystemResource("src/main/resources/input/multiline.txt"));
+        flatFileItemReader.setResource(new FileSystemResource(filename));
         flatFileItemReader.setLineMapper(patternMatchingCompositeMapper());
         return flatFileItemReader;
     }

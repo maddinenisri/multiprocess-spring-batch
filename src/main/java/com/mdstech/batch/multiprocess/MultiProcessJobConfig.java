@@ -5,6 +5,7 @@ import com.mdstech.batch.domain.CustomerDomain;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.*;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
+import org.springframework.batch.core.configuration.annotation.JobScope;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
@@ -35,12 +36,6 @@ public class MultiProcessJobConfig {
     @Autowired
     private EntityManagerFactory entityManagerFactory;
 
-//    @Autowired
-//    private CustomerWriter customerWriter;
-
-    @Value("file:/Users/srini/IdeaProjects/java8-file-handler/target/data_*.csv")
-    private Resource[] resources;
-
     @Autowired
     private InfrastructureConfiguration infrastructureConfiguration;
 
@@ -58,7 +53,8 @@ public class MultiProcessJobConfig {
     }
 
     @Bean
-    public Partitioner partitioner() {
+    @JobScope
+    public Partitioner partitioner(@Value("#{jobParameters['inputResources']}") Resource[] resources) {
         CustomMultiResourcePartitioner customMultiResourcePartitioner = new CustomMultiResourcePartitioner();
         customMultiResourcePartitioner.setResources(resources);
         return customMultiResourcePartitioner;
@@ -89,7 +85,7 @@ public class MultiProcessJobConfig {
     public Step partitionStep() {
         return stepBuilderFactory.get("partitionStep")
                 .partitioner(slaveStep())
-                .partitioner("slaveStep", partitioner())
+                .partitioner("slaveStep", partitioner(null))
                 .taskExecutor(infrastructureConfiguration.taskExecutor())
                 .build();
     }

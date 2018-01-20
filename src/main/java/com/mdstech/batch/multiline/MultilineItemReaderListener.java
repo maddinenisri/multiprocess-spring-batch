@@ -8,12 +8,12 @@ public class MultilineItemReaderListener implements ItemReadListener<ContainerVO
 
     @Override
     public void beforeRead()  {
-        log.info("Before Read of Item");
+        log.debug("Before Read of Item");
     }
 
     @Override
     public void afterRead(ContainerVO o) {
-        log.info("After Read of Item, "+ o);
+        log.debug("After Read of Item, "+ o);
     }
 
     @Override

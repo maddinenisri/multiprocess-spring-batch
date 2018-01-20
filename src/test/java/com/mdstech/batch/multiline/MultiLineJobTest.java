@@ -1,13 +1,13 @@
 package com.mdstech.batch.multiline;
 
+import com.google.common.base.Stopwatch;
+import com.mdstech.batch.SpringUnitTestCaseHelper;
 import com.mdstech.batch.common.config.ApplicationConfiguration;
 import com.mdstech.batch.common.config.StandaloneInfrastructureConfiguration;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.JobExecution;
-import org.springframework.batch.core.JobParameters;
-import org.springframework.batch.core.JobParametersInvalidException;
+import org.springframework.batch.core.*;
 import org.springframework.batch.core.configuration.JobRegistry;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.batch.core.launch.NoSuchJobException;
@@ -18,11 +18,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import java.util.concurrent.TimeUnit;
+
 import static org.junit.Assert.assertThat;
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = {ApplicationConfiguration.class, StandaloneInfrastructureConfiguration.class})
-public class MultiLineJobTest {
+@Slf4j
+public class MultiLineJobTest extends SpringUnitTestCaseHelper {
     @Autowired
     private JobLauncher jobLauncher;
 
@@ -31,9 +32,15 @@ public class MultiLineJobTest {
 
     @Test
     public void testSampleJob() throws JobParametersInvalidException, JobExecutionAlreadyRunningException, JobRestartException, JobInstanceAlreadyCompleteException, NoSuchJobException {
+        Stopwatch stopwatch = Stopwatch.createStarted();
+        JobParametersBuilder jobParametersBuilder = new JobParametersBuilder();
+        jobParametersBuilder.addString("filename", "src/main/resources/input/multiline.txt");
         Job job = jobRegistry.getJob("multilineJob");
-        JobExecution jobExecution = jobLauncher.run(job, new JobParameters());
+        JobExecution jobExecution = jobLauncher.run(job, jobParametersBuilder.toJobParameters());
         System.out.println(jobExecution.getStatus());
         System.out.println("Completed");
+        long millis = stopwatch.elapsed(TimeUnit.MILLISECONDS);
+        log.info("time: " + stopwatch);
+        System.out.println("Time it took:" + stopwatch);
     }
 }

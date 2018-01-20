@@ -1,14 +1,15 @@
 package com.mdstech.batch.multiprocess;
 
+import com.google.common.base.Stopwatch;
+import com.mdstech.batch.SpringUnitTestCaseHelper;
 import com.mdstech.batch.common.config.ApplicationConfiguration;
 import com.mdstech.batch.common.config.StandaloneInfrastructureConfiguration;
 import com.mdstech.batch.domain.CustomerDomain;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.JobExecution;
-import org.springframework.batch.core.JobParameters;
-import org.springframework.batch.core.JobParametersInvalidException;
+import org.springframework.batch.core.*;
 import org.springframework.batch.core.configuration.JobRegistry;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.batch.core.launch.NoSuchJobException;
@@ -16,19 +17,24 @@ import org.springframework.batch.core.repository.JobExecutionAlreadyRunningExcep
 import org.springframework.batch.core.repository.JobInstanceAlreadyCompleteException;
 import org.springframework.batch.core.repository.JobRestartException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.transaction.TransactionManager;
+
+import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = {ApplicationConfiguration.class, StandaloneInfrastructureConfiguration.class})
-public class MultiFlatfileToDBJobTest {
+@Slf4j
+public class MultiProcessJobTest extends SpringUnitTestCaseHelper {
 
     @Autowired
     private JobLauncher jobLauncher;
@@ -39,17 +45,36 @@ public class MultiFlatfileToDBJobTest {
     @Autowired
     private EntityManager entityManager;
 
+    @Autowired
+    @Qualifier("transactionManager")
+    private PlatformTransactionManager transactionManager;
+
+    @Before
+    public void setUp() throws Exception {
+        TransactionDefinition def = new DefaultTransactionDefinition();
+        TransactionStatus status = transactionManager.getTransaction(def);
+        entityManager.joinTransaction();
+        entityManager.createQuery("DELETE FROM CustomerDomain e").executeUpdate();
+        transactionManager.commit(status);
+    }
+
     @Test
     public void testSampleJob() throws JobParametersInvalidException, JobExecutionAlreadyRunningException, JobRestartException, JobInstanceAlreadyCompleteException, NoSuchJobException {
+        Stopwatch stopwatch = Stopwatch.createStarted();
+
+        JobParametersBuilder jobParametersBuilder = new JobParametersBuilder();
+        jobParametersBuilder.addString("inputResources", "file:/Users/srini/IdeaProjects/java8-file-handler/target/data_*.csv");
         Job job = jobRegistry.getJob("partitionerJob");
-        JobExecution jobExecution = jobLauncher.run(job, new JobParameters());
+        JobExecution jobExecution = jobLauncher.run(job, jobParametersBuilder.toJobParameters());
         System.out.println(jobExecution.getStatus());
         System.out.println("Completed");
-
+        long millis = stopwatch.elapsed(TimeUnit.MILLISECONDS);
+        log.info("time: " + stopwatch);
+        System.out.println("Time it took:" + stopwatch);
         CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
         CriteriaQuery<Long> countQuery = criteriaBuilder.createQuery(Long.class);
         countQuery.select(criteriaBuilder.count(countQuery.from(CustomerDomain.class)));
-        Long count = entityManager.createQuery(countQuery) .getSingleResult();
+        Long count = entityManager.createQuery(countQuery).getSingleResult();
 
         assertThat("Expected nearly 2.5 million", count, equalTo(2498925L));
     }

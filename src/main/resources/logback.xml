@@ -9,7 +9,7 @@
         </layout>
     </appender>
 
-    <logger name="com.mdstech.batch" level="DEBUG"
+    <logger name="com.mdstech.batch" level="INFO"
             additivity="false">
         <appender-ref ref="STDOUT" />
     </logger>

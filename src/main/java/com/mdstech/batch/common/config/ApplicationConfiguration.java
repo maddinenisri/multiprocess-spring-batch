@@ -38,6 +38,7 @@ public class ApplicationConfiguration implements BatchConfigurer {
     EntityManagerFactory entityManagerFactory;
 
     @Bean
+    @Qualifier("transactionManager")
     public PlatformTransactionManager transactionManager(EntityManagerFactory emf) {
         JpaTransactionManager platformTransactionManager = new JpaTransactionManager();
         platformTransactionManager.setEntityManagerFactory(emf);
