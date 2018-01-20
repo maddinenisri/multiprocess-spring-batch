@@ -9,6 +9,7 @@ import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.Database;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.transaction.PlatformTransactionManager;
 
 import javax.sql.DataSource;
 import java.util.Properties;
@@ -44,6 +45,14 @@ public class ContainerInfrastructureConfiguration implements InfrastructureConfi
         taskExecutor.setMaxPoolSize(4);
         taskExecutor.afterPropertiesSet();
         return taskExecutor;
+    }
+
+    @Bean
+    @Override
+    public PlatformTransactionManager transactionManager() {
+        JpaTransactionManager jpaTransactionManager = new JpaTransactionManager();
+        jpaTransactionManager.setEntityManagerFactory(entityManagerFactory().getObject());
+        return jpaTransactionManager;
     }
 
     private Properties additionalProperties() {

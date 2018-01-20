@@ -1,7 +1,5 @@
 package com.mdstech.batch.common.config;
 
-import com.mdstech.batch.common.config.InfrastructureConfiguration;
-import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,10 +10,11 @@ import org.springframework.core.task.TaskExecutor;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.jdbc.datasource.init.DataSourceInitializer;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
+import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.Database;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.transaction.PlatformTransactionManager;
 
 import javax.sql.DataSource;
 import java.net.MalformedURLException;
@@ -54,6 +53,14 @@ public class StandaloneInfrastructureConfiguration implements InfrastructureConf
         simpleAsyncTaskExecutor.setConcurrencyLimit(1);
         return simpleAsyncTaskExecutor;
 //        return new SimpleAsyncTaskExecutor();
+    }
+
+    @Bean
+    @Override
+    public PlatformTransactionManager transactionManager() {
+        JpaTransactionManager jpaTransactionManager = new JpaTransactionManager();
+        jpaTransactionManager.setEntityManagerFactory(entityManagerFactory().getObject());
+        return jpaTransactionManager;
     }
 
     @Bean

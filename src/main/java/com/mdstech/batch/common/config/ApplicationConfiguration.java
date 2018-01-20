@@ -19,7 +19,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import javax.persistence.EntityManager;
@@ -34,15 +33,10 @@ public class ApplicationConfiguration implements BatchConfigurer {
     @Autowired
     InfrastructureConfiguration infrastructureConfiguration;
 
-    @Autowired
-    EntityManagerFactory entityManagerFactory;
-
     @Bean
     @Qualifier("transactionManager")
-    public PlatformTransactionManager transactionManager(EntityManagerFactory emf) {
-        JpaTransactionManager platformTransactionManager = new JpaTransactionManager();
-        platformTransactionManager.setEntityManagerFactory(emf);
-        return platformTransactionManager;
+    public PlatformTransactionManager transactionManager() {
+        return infrastructureConfiguration.transactionManager();
     }
 
     @Bean
@@ -78,7 +72,7 @@ public class ApplicationConfiguration implements BatchConfigurer {
 
     @Override
     public PlatformTransactionManager getTransactionManager() throws Exception {
-        return transactionManager(entityManagerFactory);
+        return infrastructureConfiguration.transactionManager();
     }
 
     @Override
