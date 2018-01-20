@@ -14,8 +14,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import java.util.List;
 
-@Component
-@StepScope
 @Slf4j
 public class CustomerWriter extends JpaItemWriter<CustomerDomain> {
 

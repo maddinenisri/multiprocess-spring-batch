@@ -12,6 +12,7 @@ import org.springframework.batch.core.job.builder.FlowBuilder;
 import org.springframework.batch.core.job.flow.Flow;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.step.tasklet.SystemCommandTasklet;
+import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.MultiResourceItemReader;
 import org.springframework.batch.item.file.mapping.DefaultLineMapper;
@@ -21,6 +22,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
+
+import javax.persistence.EntityManagerFactory;
 
 @Slf4j
 @Configuration
@@ -32,7 +35,14 @@ public class MultiThreadJobConfig {
     public StepBuilderFactory stepBuilderFactory;
 
     @Autowired
-    private CustomerWriter customerWriter;
+    private EntityManagerFactory entityManagerFactory;
+
+    @Bean
+    @StepScope
+    public ItemWriter<CustomerDomain> itemWriter() {
+        CustomerWriter customerWriter = new CustomerWriter(entityManagerFactory);
+        return customerWriter;
+    }
 
     @Autowired
     private InfrastructureConfiguration infrastructureConfiguration;
@@ -90,9 +100,9 @@ public class MultiThreadJobConfig {
         return stepBuilderFactory.get("partitionStep")
                 .<CustomerDomain, CustomerDomain>chunk(5000)
                 .reader(multiResourceItemReader())
-                .writer(customerWriter)
-                .listener(stepExecutionListener())
+                .writer(itemWriter())
                 .listener(chunkListener())
+                .listener(stepExecutionListener())
                 .taskExecutor(infrastructureConfiguration.taskExecutor())
                 .build();
     }

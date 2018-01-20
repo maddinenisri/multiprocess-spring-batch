@@ -9,6 +9,7 @@ import org.springframework.batch.core.configuration.annotation.StepBuilderFactor
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.partition.support.Partitioner;
+import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.mapping.DefaultLineMapper;
 import org.springframework.batch.item.file.transform.DelimitedLineTokenizer;
@@ -18,6 +19,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
+
+import javax.persistence.EntityManagerFactory;
 
 @Slf4j
 @Configuration
@@ -30,7 +33,10 @@ public class MultiProcessJobConfig {
     public StepBuilderFactory stepBuilderFactory;
 
     @Autowired
-    private CustomerWriter customerWriter;
+    private EntityManagerFactory entityManagerFactory;
+
+//    @Autowired
+//    private CustomerWriter customerWriter;
 
     @Value("file:/Users/srini/IdeaProjects/java8-file-handler/target/data_*.csv")
     private Resource[] resources;
@@ -63,7 +69,7 @@ public class MultiProcessJobConfig {
         return stepBuilderFactory.get("slaveStep")
                 .<CustomerDomain, CustomerDomain>chunk(5000)
                 .reader(reader(null))
-                .writer(customerWriter)
+                .writer(itemWriter())
                 .listener(stepExecutionListener())
                 .listener(chunkListener())
                 .build();
@@ -103,4 +109,10 @@ public class MultiProcessJobConfig {
         return flatFileItemReader;
     }
 
+    @Bean
+    @StepScope
+    public ItemWriter<CustomerDomain> itemWriter() {
+        CustomerWriter customerWriter = new CustomerWriter(entityManagerFactory);
+        return customerWriter;
+    }
 }

@@ -2,8 +2,7 @@ package com.mdstech.batch.multiline;
 
 import com.mdstech.batch.common.config.InfrastructureConfiguration;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.Step;
+import org.springframework.batch.core.*;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
@@ -36,10 +35,10 @@ public class MultilLineJobConfig {
     private InfrastructureConfiguration infrastructureConfiguration;
 
     @Bean(name="multilineJob")
-    public Job multilineJob() {
+    public Job multilineJob(Step step) {
         return jobBuilderFactory.get("multilineJob")
                 .incrementer(new RunIdIncrementer())
-                .flow(multilineStep()).end().build();
+                .flow(step).end().build();
     }
 
     @Bean
@@ -47,9 +46,34 @@ public class MultilLineJobConfig {
         return stepBuilderFactory.get("multilineStep")
                 .<ContainerVO, ContainerVO> chunk(5)
                 .reader(readerDelegate())
-                .writer(writer())
+                .writer(itemWriter())
+                .listener(itemReaderListener())
+                .listener(itemWriteListener())
+                .listener(chunkListener())
+//                .listener(chunkListener())
                 .build();
     }
+
+    @Bean
+    public StepExecutionListener stepExecutionListener() {
+        return new MultiLineStepListener();
+    }
+
+    @Bean
+    public ChunkListener chunkListener() {
+        return new MultiLineChunkListiner();
+    }
+
+    @Bean
+    public ItemReadListener<ContainerVO> itemReaderListener() {
+        return new MultilineItemReaderListener();
+    }
+
+    @Bean
+    public ItemWriteListener<ContainerVO> itemWriteListener() {
+        return new MultilineItemWriterListener();
+    }
+
 
     @Bean
     public ItemReader readerDelegate() {
@@ -83,7 +107,7 @@ public class MultilLineJobConfig {
     }
 
     @Bean
-    public ItemWriter writer() {
+    public ItemWriter itemWriter() {
         ConsoleItemWriter consoleItemWriter = new ConsoleItemWriter();
         return consoleItemWriter;
     }
