@@ -1,6 +1,7 @@
 package com.mdstech.batch.multithread;
 
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.UnexpectedJobExecutionException;
 import org.springframework.batch.core.scope.context.ChunkContext;
@@ -12,6 +13,7 @@ import org.springframework.util.Assert;
 
 import java.io.File;
 
+@Slf4j
 public class FileDeletingTasklet implements Tasklet, InitializingBean {
 
     private Resource directory;
@@ -29,7 +31,7 @@ public class FileDeletingTasklet implements Tasklet, InitializingBean {
                 throw new UnexpectedJobExecutionException(
                         "Could not delete file " + files[i].getPath());
             } else {
-                System.out.println(files[i].getPath() + " is deleted!");
+                log.debug(files[i].getPath() + " is deleted!");
             }
         }
         return RepeatStatus.FINISHED;
