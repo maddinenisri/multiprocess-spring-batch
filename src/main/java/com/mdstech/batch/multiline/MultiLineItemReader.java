@@ -29,14 +29,14 @@ public class MultiLineItemReader implements ItemReader<ContainerVO>, ItemStream 
                     containerVO.setMultiRowVO(multiRowVO);
                     containerVO.getMultiRowVO().setKey(prefix);
                     containerVO.getMultiRowVO().setGroupKey(line.readString(3));
-                    setValue(containerVO.getMultiRowVO(), percent, line.readString(5));
+                    setValue(containerVO.getMultiRowVO(), percent, line.readString(5), line.readString(6), line.readString(7), line.readString(8), line.readString(9), line.readString(10), line.readString(11), line.readString(12), line.readString(13), line.readString(14));
                 }
                 else if("0".equals(percent)) {
-                    setValue(containerVO.getMultiRowVO(), percent, line.readString(5));
+                    setValue(containerVO.getMultiRowVO(), percent, line.readString(5), line.readString(6), line.readString(7), line.readString(8), line.readString(9), line.readString(10), line.readString(11), line.readString(12), line.readString(13), line.readString(14));
                     return containerVO;
                 }
                 else {
-                    setValue(containerVO.getMultiRowVO(), percent, line.readString(5));
+                    setValue(containerVO.getMultiRowVO(), percent, line.readString(5), line.readString(6), line.readString(7), line.readString(8), line.readString(9), line.readString(10), line.readString(11), line.readString(12), line.readString(13), line.readString(14));
                 }
             }
             else {
@@ -64,22 +64,22 @@ public class MultiLineItemReader implements ItemReader<ContainerVO>, ItemStream 
         this.delegate.update(executionContext);
     }
 
-    private void setValue(MultiRowVO multiRowVO, String percent, String value) {
+    private void setValue(MultiRowVO multiRowVO, String percent, String... values) {
         switch(percent) {
             case "100":
-                multiRowVO.setFull(value);
+                multiRowVO.setValues(MultiRowVO.OptionType.FULL, values);
                 break;
             case "50":
-                multiRowVO.setHalf(value);
+                multiRowVO.setValues(MultiRowVO.OptionType.HALF, values);
                 break;
             case "0":
-                multiRowVO.setZero(value);
+                multiRowVO.setValues(MultiRowVO.OptionType.ZERO, values);
                 break;
             case "75":
-                multiRowVO.setThreefourth(value);
+                multiRowVO.setValues(MultiRowVO.OptionType.THREE_FOURTH, values);
                 break;
             case "25":
-                multiRowVO.setOnefourth(value);
+                multiRowVO.setValues(MultiRowVO.OptionType.ONE_FOURTH, values);
                 break;
             default:
                 break;

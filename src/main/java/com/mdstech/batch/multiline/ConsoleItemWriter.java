@@ -12,7 +12,15 @@ public class ConsoleItemWriter<T> implements ItemWriter<T> {
     public void write(List<? extends T> items) throws Exception {
         log.info("Console item writer starts");
         for (T item : items) {
-            log.info(String.format("%s", item));
+            ContainerVO containerVO = (ContainerVO)item;
+            if(containerVO.getMultiRowVO() != null) {
+                for (RecordVO recordVO : containerVO.getMultiRowVO() .getRecords()) {
+                    log.info(String.format("%s", recordVO));
+                }
+            }
+            else {
+                log.info(String.format("%s", item));
+            }
         }
         log.info("Console item writer ends");
 

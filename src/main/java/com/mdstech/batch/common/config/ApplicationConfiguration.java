@@ -27,7 +27,7 @@ import javax.persistence.EntityManagerFactory;
 @Slf4j
 @Configuration
 @EnableBatchProcessing(modular = true)
-@ComponentScan(basePackages = {"com.mdstech.batch.domain", "com.mdstech.batch.config"})
+@ComponentScan(basePackages = {"com.mdstech.batch.domain", "com.mdstech.batch.common.config"})
 public class ApplicationConfiguration implements BatchConfigurer {
 
     @Autowired
