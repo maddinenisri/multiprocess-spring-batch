@@ -12,6 +12,9 @@ import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.builder.FlowBuilder;
 import org.springframework.batch.core.job.flow.Flow;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
+import org.springframework.batch.core.partition.PartitionHandler;
+import org.springframework.batch.core.partition.support.Partitioner;
+import org.springframework.batch.core.partition.support.TaskExecutorPartitionHandler;
 import org.springframework.batch.core.step.tasklet.SystemCommandTasklet;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.item.ItemWriter;
@@ -23,6 +26,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 
 import javax.persistence.EntityManagerFactory;
@@ -96,13 +101,43 @@ public class MultiThreadJobConfig {
     @Bean
     public Step partitionStep() {
         return stepBuilderFactory.get("partitionStep")
-                .<CustomerDomain, CustomerDomain>chunk(5000)
-                .reader(multiResourceItemReader(null))
-                .writer(itemWriter())
-                .listener(chunkListener())
-                .listener(stepExecutionListener())
-                .taskExecutor(infrastructureConfiguration.taskExecutor())
+//                .partitioner(taskletStep())
+                .partitioner("taskletStep", multiThreadPartitioner(null))
+                .partitionHandler(partitionHandler())
+//                .taskExecutor(infrastructureConfiguration.taskExecutor())
                 .build();
+
+//        return stepBuilderFactory.get("partitionStep")
+//                .<CustomerDomain, CustomerDomain>chunk(5000)
+//                .reader(multiResourceItemReader(null))
+//                .writer(itemWriter())
+//                .listener(chunkListener())
+//                .listener(stepExecutionListener())
+//                .taskExecutor(infrastructureConfiguration.taskExecutor())
+//                .build();
+    }
+
+    @Bean
+    public PartitionHandler partitionHandler() {
+        TaskExecutorPartitionHandler partitionHandler = new TaskExecutorPartitionHandler();
+        partitionHandler.setGridSize(8);
+        partitionHandler.setTaskExecutor(infrastructureConfiguration.taskExecutor());
+        partitionHandler.setStep(taskletStep());
+        return partitionHandler;
+    }
+
+    @Bean
+    public Step taskletStep() {
+        return stepBuilderFactory.get("taskletStep")
+                .<CustomerDomain, CustomerDomain>chunk(5000)
+                .reader(reader(null, null))
+                .writer(itemWriter())
+                .build();
+    }
+
+    @Bean
+    public Tasklet tasklet() {
+        return new MultiThreadTasklet();
     }
 
     @Bean
@@ -117,16 +152,25 @@ public class MultiThreadJobConfig {
 
     @Bean
     @StepScope
-    public MultiResourceItemReader<CustomerDomain> multiResourceItemReader(@Value("#{jobParameters['iputFilesPath']}") Resource[] resources) {
-        MultiResourceItemReader<CustomerDomain> resourceItemReader = new MultiResourceItemReader<CustomerDomain>();
-        resourceItemReader.setResources(resources);
-        resourceItemReader.setDelegate(reader());
-        return resourceItemReader;
+    public Partitioner multiThreadPartitioner(@Value("#{jobParameters['iputFilesPath']}") Resource[] resources) {
+        MultiThreadPartitioner multiThreadPartitioner = new MultiThreadPartitioner();
+        multiThreadPartitioner.setResources(resources);
+        return multiThreadPartitioner;
     }
+
+//    @Bean
+//    @StepScope
+//    public MultiResourceItemReader<CustomerDomain> multiResourceItemReader(@Value("#{jobParameters['iputFilesPath']}") Resource[] resources) {
+//        MultiResourceItemReader<CustomerDomain> resourceItemReader = new MultiResourceItemReader<CustomerDomain>();
+//        resourceItemReader.setResources(resources);
+//        resourceItemReader.setDelegate(reader());
+//        return resourceItemReader;
+//    }
 
     @Bean
     @StepScope
-    public FlatFileItemReader<CustomerDomain> reader() {
+    public FlatFileItemReader<CustomerDomain> reader(@Value("#{jobParameters['stagingDirectory']}") String stagingDirectory,
+                                                     @Value("#{stepExecutionContext['file']}") String resource) {
         DelimitedLineTokenizer delimitedLineTokenizer = new DelimitedLineTokenizer();
         delimitedLineTokenizer.setNames("customerId,name,houseNo,streetName,state,zipCode".split(","));
         delimitedLineTokenizer.setDelimiter("|");
@@ -135,6 +179,8 @@ public class MultiThreadJobConfig {
         defaultLineMapper.setFieldSetMapper(new RecordFiledSetMapper());
         FlatFileItemReader flatFileItemReader = new FlatFileItemReader();
         flatFileItemReader.setLineMapper(defaultLineMapper);
+        flatFileItemReader.setResource(new FileSystemResource(stagingDirectory+"/"+resource));
+
         return flatFileItemReader;
     }
 

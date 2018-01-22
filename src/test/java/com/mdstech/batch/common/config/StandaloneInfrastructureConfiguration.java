@@ -50,7 +50,7 @@ public class StandaloneInfrastructureConfiguration implements InfrastructureConf
 //        return taskExecutor;
 
         SimpleAsyncTaskExecutor simpleAsyncTaskExecutor = new SimpleAsyncTaskExecutor();
-        simpleAsyncTaskExecutor.setConcurrencyLimit(1);
+        simpleAsyncTaskExecutor.setConcurrencyLimit(8);
         return simpleAsyncTaskExecutor;
 //        return new SimpleAsyncTaskExecutor();
     }
