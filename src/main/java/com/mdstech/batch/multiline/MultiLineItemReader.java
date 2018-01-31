@@ -9,6 +9,11 @@ import org.springframework.batch.item.file.transform.FieldSet;
 
 public class MultiLineItemReader implements ItemReader<ContainerVO>, ItemStream {
     private FlatFileItemReader<FieldSet> delegate;
+    private SequenceGenerator sequenceGenerator;
+
+    public void setSequenceGenerator(SequenceGenerator sequenceGenerator) {
+        this.sequenceGenerator = sequenceGenerator;
+    }
 
     public void setDelegate(FlatFileItemReader<FieldSet> delegate) {
         this.delegate = delegate;
@@ -42,7 +47,9 @@ public class MultiLineItemReader implements ItemReader<ContainerVO>, ItemStream 
             else {
                 containerVO = new ContainerVO();
                 containerVO.setSimpleVO(new SimpleVO());
-                containerVO.getSimpleVO().setKey(line.readString(2));
+                Integer seq = sequenceGenerator.getNextSequence(line.readString(0), line.readString(2));
+                containerVO.getSimpleVO().setKey(String.format("%s_%s", line.readString(0), line.readString(2)));
+                containerVO.getSimpleVO().setSequence(seq);
                 return containerVO;
             }
         }

@@ -5,4 +5,6 @@ import lombok.Data;
 @Data
 public class SimpleVO {
     private String key;
+    private Integer sequence;
+
 }

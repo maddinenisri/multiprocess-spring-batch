@@ -15,6 +15,7 @@ import org.springframework.batch.item.file.mapping.PatternMatchingCompositeLineM
 import org.springframework.batch.item.file.transform.DelimitedLineTokenizer;
 import org.springframework.batch.item.file.transform.LineTokenizer;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -40,10 +41,10 @@ public class MultilLineJobConfig {
     }
 
     @Bean
-    public Step multilineStep() {
+    public Step multilineStep(@Qualifier("sequenceGenerator") SequenceGenerator sequenceGenerator) {
         return stepBuilderFactory.get("multilineStep")
                 .<ContainerVO, ContainerVO> chunk(5)
-                .reader(readerDelegate())
+                .reader(readerDelegate(sequenceGenerator))
                 .writer(itemWriter())
                 .listener(itemReaderListener())
                 .listener(itemWriteListener())
@@ -74,10 +75,17 @@ public class MultilLineJobConfig {
 
 
     @Bean
-    public ItemReader readerDelegate() {
+    public ItemReader readerDelegate(SequenceGenerator sequenceGenerator) {
         MultiLineItemReader multiLineItemReader = new MultiLineItemReader();
+        multiLineItemReader.setSequenceGenerator(sequenceGenerator);
         multiLineItemReader.setDelegate(reader(null));
         return multiLineItemReader;
+    }
+
+    @Bean
+    @JobScope
+    public SequenceGenerator sequenceGenerator() {
+        return new SequenceGenerator();
     }
 
     @Bean

@@ -19,14 +19,12 @@ import org.springframework.batch.core.step.tasklet.SystemCommandTasklet;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.file.FlatFileItemReader;
-import org.springframework.batch.item.file.MultiResourceItemReader;
 import org.springframework.batch.item.file.mapping.DefaultLineMapper;
 import org.springframework.batch.item.file.transform.DelimitedLineTokenizer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 
@@ -105,6 +103,7 @@ public class MultiThreadJobConfig {
                 .partitioner("taskletStep", multiThreadPartitioner(null))
                 .partitionHandler(partitionHandler())
 //                .taskExecutor(infrastructureConfiguration.taskExecutor())
+//                .step(moveStep())
                 .build();
 
 //        return stepBuilderFactory.get("partitionStep")
@@ -122,12 +121,12 @@ public class MultiThreadJobConfig {
         TaskExecutorPartitionHandler partitionHandler = new TaskExecutorPartitionHandler();
         partitionHandler.setGridSize(8);
         partitionHandler.setTaskExecutor(infrastructureConfiguration.taskExecutor());
-        partitionHandler.setStep(taskletStep());
+        partitionHandler.setStep(simpleStep());
         return partitionHandler;
     }
 
     @Bean
-    public Step taskletStep() {
+    public Step simpleStep() {
         return stepBuilderFactory.get("taskletStep")
                 .<CustomerDomain, CustomerDomain>chunk(5000)
                 .reader(reader(null, null))
@@ -136,6 +135,14 @@ public class MultiThreadJobConfig {
     }
 
     @Bean
+    public Step moveStep() {
+        return stepBuilderFactory
+                .get("moveStep")
+                .tasklet(tasklet())
+                .build();
+    }
+    @Bean
+    @StepScope
     public Tasklet tasklet() {
         return new MultiThreadTasklet();
     }
