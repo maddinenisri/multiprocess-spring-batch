@@ -41,10 +41,10 @@ public class MultilLineJobConfig {
     }
 
     @Bean
-    public Step multilineStep(@Qualifier("sequenceGenerator") SequenceGenerator sequenceGenerator) {
+    public Step multilineStep() {
         return stepBuilderFactory.get("multilineStep")
                 .<ContainerVO, ContainerVO> chunk(5)
-                .reader(readerDelegate(sequenceGenerator))
+                .reader(readerDelegate(sequenceGenerator()))
                 .writer(itemWriter())
                 .listener(itemReaderListener())
                 .listener(itemWriteListener())
