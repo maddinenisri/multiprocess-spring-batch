@@ -107,7 +107,7 @@ public class MultilLineJobConfig {
         patternMatchingCompositeLineMapper.setTokenizers(tokenizerMap);
         Map<String, FieldSetMapper> fieldSetMapperMap = new HashMap<>();
         fieldSetMapperMap.put("1|*", new MultilineFieldSetMapper());
-        fieldSetMapperMap.put("*", new MultilineFieldSetMapper());
+        fieldSetMapperMap.put("*", new SimpleItemMapper());
 
         patternMatchingCompositeLineMapper.setFieldSetMappers(fieldSetMapperMap);
         return patternMatchingCompositeLineMapper;
